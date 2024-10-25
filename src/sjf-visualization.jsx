@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Timer, Plus, Play, Clock, BarChart2, Loader2 } from "lucide-react"
 import PropTypes from 'prop-types';
+import Footer from './Footer';
 
 const SJF = () => {
   // State Management
@@ -140,12 +141,12 @@ const SJF = () => {
   );
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
+    <><div className="p-4 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
         <BarChart2 className="w-8 h-8 text-blue-600" />
         SJF Algorithm Visualization
       </h1>
-      
+
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="p-4 bg-white rounded-lg shadow-sm">
           <Label htmlFor="arrivalTime" className="flex items-center gap-2">
@@ -157,8 +158,7 @@ const SJF = () => {
             type="number"
             value={newProcess.arrivalTime}
             onChange={(e) => setNewProcess({ ...newProcess, arrivalTime: parseInt(e.target.value) || 0 })}
-            className="mt-1"
-          />
+            className="mt-1" />
         </div>
         <div className="p-4 bg-white rounded-lg shadow-sm">
           <Label htmlFor="burstTime" className="flex items-center gap-2">
@@ -170,18 +170,17 @@ const SJF = () => {
             type="number"
             value={newProcess.burstTime}
             onChange={(e) => setNewProcess({ ...newProcess, burstTime: parseInt(e.target.value) || 0 })}
-            className="mt-1"
-          />
+            className="mt-1" />
         </div>
       </div>
-      
+
       <div className="flex gap-2 mb-8">
         <Button onClick={addProcess} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add Process
         </Button>
-        <Button 
-          onClick={runSJF} 
+        <Button
+          onClick={runSJF}
           disabled={isRunning || processes.length === 0}
           className="flex items-center gap-2"
         >
@@ -203,8 +202,8 @@ const SJF = () => {
           </h3>
           <div className="space-y-2">
             {processes.map((process) => (
-              <div key={process.id} 
-                   className="bg-yellow-500 p-3 rounded-lg text-white  text-center transform transition-all hover:scale-105">
+              <div key={process.id}
+                className="bg-yellow-500 p-3 rounded-lg text-white  text-center transform transition-all hover:scale-105">
                 P{process.id} (Burst: {process.burstTime})
               </div>
             ))}
@@ -223,7 +222,7 @@ const SJF = () => {
                 </div>
               </>
             ) : (
-              <div className="text-lg font-bold text-gray-400">Processor Idle</div>
+              <div className="text-lg font-bold text-gray-600">Processor Idle</div>
             )}
           </div>
           <div className="w-full bg-gray-200 h-8 rounded-full relative overflow-hidden">
@@ -251,8 +250,8 @@ const SJF = () => {
           </h3>
           <div className="space-y-2">
             {completedProcesses.map((process) => (
-              <div key={process.id} 
-                   className="bg-green-500 p-3 rounded-lg text-white text-center transform transition-all hover:scale-105">
+              <div key={process.id}
+                className="bg-green-500 p-3 rounded-lg text-white text-center transform transition-all hover:scale-105">
                 P{process.id}  (Burst: {process.burstTime})
               </div>
             ))}
@@ -267,8 +266,8 @@ const SJF = () => {
         </h3>
         <div className="flex">
           {ganttChart.map((process, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="h-12 flex items-center justify-center text-white font-bold transition-all hover:brightness-110"
               style={{
                 width: `${((process.end || currentTime) - process.start) * 20}px`,
@@ -281,7 +280,7 @@ const SJF = () => {
         </div>
         <div className="flex mt-1">
           {ganttChart.map((process, index) => (
-            <div key={index} className="text-xs" style={{width: `${((process.end || currentTime) - process.start) * 20}px`}}>
+            <div key={index} className="text-xs" style={{ width: `${((process.end || currentTime) - process.start) * 20}px` }}>
               {process.start}
             </div>
           ))}
@@ -290,21 +289,18 @@ const SJF = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <MetricCard 
-          title="Current Time" 
+        <MetricCard
+          title="Current Time"
           value={currentTime}
-          icon={Clock}
-        />
-        <MetricCard 
-          title="Average Waiting Time" 
+          icon={Clock} />
+        <MetricCard
+          title="Average Waiting Time"
           value={`${calculateAverageWaitingTime().toFixed(2)}s`}
-          icon={Timer}
-        />
-        <MetricCard 
-          title="Average Turnaround Time" 
+          icon={Timer} />
+        <MetricCard
+          title="Average Turnaround Time"
           value={`${calculateAverageTurnaroundTime().toFixed(2)}s`}
-          icon={Timer}
-        />
+          icon={Timer} />
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -336,6 +332,8 @@ const SJF = () => {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 SJF.propTypes = {
