@@ -47,5 +47,4 @@ A web-based tool to visualize the **Shortest Job First (SJF) Scheduling Algorith
 
 **📄 License**
 - This project is licensed under the MIT License.
-- 
-You can copy and paste this directly into your `README.md` file. Let me know if you need any modifications!
+- You can copy and paste this directly into your `README.md` file. Let me know if you need any modifications!
