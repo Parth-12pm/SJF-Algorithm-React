@@ -94,7 +94,7 @@ const SJF = () => {
   // Run SJF algorithm
   const runSJF = () => {
     setIsRunning(true);
-    setCurrentTime(-2);
+    setCurrentTime(0);
     setCompletedProcesses([]);
     setGanttChart([]);
     setRunningProcess(null);
