@@ -6,10 +6,11 @@ import { Timer, Plus, Play, Clock, BarChart2, Loader2 } from "lucide-react"
 import PropTypes from 'prop-types';
 import Footer from './Footer';
 
+
 const SJF = () => {
   // State Management
   const [processes, setProcesses] = useState([]);
-  const [newProcess, setNewProcess] = useState({ id: 1, arrivalTime: null , burstTime: null });
+  const [newProcess, setNewProcess] = useState({ id: 1, burstTime: null });
   const [isRunning, setIsRunning] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [runningProcess, setRunningProcess] = useState(null);
@@ -19,25 +20,17 @@ const SJF = () => {
   // Memoize updateProcessorState to prevent recreation on each render
   const updateProcessorState = useCallback((time) => {
     if (!runningProcess) {
-      const availableProcesses = processes.filter(p => p.arrivalTime <= time);
-      if (availableProcesses.length > 0) {
-        availableProcesses.sort((a, b) => {
-          if (a.burstTime === b.burstTime) {
-            return a.arrivalTime - b.arrivalTime;
-          }
-          return a.burstTime - b.burstTime;
-        });
-        const shortestJob = availableProcesses[0];
+      if (processes.length > 0) {
+        // Sort by burst time only
+        const shortestJob = [...processes].sort((a, b) => a.burstTime - b.burstTime)[0];
         
         setRunningProcess({...shortestJob, startTime: time});
         setProcesses(processes.filter(p => p.id !== shortestJob.id));
         
-        // Add to Gantt chart only when starting a new process
         setGanttChart(prev => {
-          // Check if the last entry is for the same process and incomplete
           const lastEntry = prev[prev.length - 1];
           if (lastEntry && lastEntry.id === shortestJob.id && !lastEntry.end) {
-            return prev; // Don't add a new entry if the last one is incomplete
+            return prev;
           }
           return [...prev, { id: shortestJob.id, start: time }];
         });
@@ -47,17 +40,15 @@ const SJF = () => {
         const completedProcess = {
           ...runningProcess, 
           completionTime: time,
-          waitingTime: runningProcess.startTime - runningProcess.arrivalTime,
-          turnaroundTime: time - runningProcess.arrivalTime
+          waitingTime: runningProcess.startTime,
+          turnaroundTime: time
         };
         
-        // Update completed processes without duplication
         setCompletedProcesses(prev => {
           const isAlreadyCompleted = prev.some(p => p.id === completedProcess.id);
           return isAlreadyCompleted ? prev : [...prev, completedProcess];
         });
         
-        // Update Gantt chart - complete the current process entry
         setGanttChart(prev => {
           const lastEntry = prev[prev.length - 1];
           if (lastEntry && lastEntry.id === completedProcess.id) {
@@ -83,7 +74,7 @@ const SJF = () => {
           updateProcessorState(newTime);
           return newTime;
         });
-      }, 500);
+      }, 1000);
     } else if (isRunning && processes.length === 0 && !runningProcess) {
       setIsRunning(false);
     }
@@ -97,13 +88,13 @@ const SJF = () => {
       return;
     }
     setProcesses(prev => [...prev, {...newProcess, id: prev.length + 1}]);
-    setNewProcess({ id: processes.length + 2, arrivalTime: 0, burstTime: 0 });
+    setNewProcess({ id: processes.length + 2, burstTime: 0 });
   };
 
   // Run SJF algorithm
   const runSJF = () => {
     setIsRunning(true);
-    setCurrentTime(0);
+    setCurrentTime(-2);
     setCompletedProcesses([]);
     setGanttChart([]);
     setRunningProcess(null);
@@ -141,37 +132,23 @@ const SJF = () => {
   );
 
   return (
-    <><div className="p-4 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
         <BarChart2 className="w-8 h-8 text-blue-600" />
         SJF Algorithm Visualization
       </h1>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-4 bg-white rounded-lg shadow-sm">
-          <Label htmlFor="arrivalTime" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Arrival Time
-          </Label>
-          <Input
-            id="arrivalTime"
-            type="number"
-            value={newProcess.arrivalTime}
-            onChange={(e) => setNewProcess({ ...newProcess, arrivalTime: parseInt(e.target.value) || 0 })}
-            className="mt-1" />
-        </div>
-        <div className="p-4 bg-white rounded-lg shadow-sm">
-          <Label htmlFor="burstTime" className="flex items-center gap-2">
-            <Timer className="w-4 h-4" />
-            Burst Time
-          </Label>
-          <Input
-            id="burstTime"
-            type="number"
-            value={newProcess.burstTime}
-            onChange={(e) => setNewProcess({ ...newProcess, burstTime: parseInt(e.target.value) || 0 })}
-            className="mt-1" />
-        </div>
+      <div className="p-4 bg-white rounded-lg shadow-sm mb-6">
+        <Label htmlFor="burstTime" className="flex items-center gap-2">
+          <Timer className="w-4 h-4" />
+          Burst Time
+        </Label>
+        <Input
+          id="burstTime"
+          type="number"
+          value={newProcess.burstTime}
+          onChange={(e) => setNewProcess({ ...newProcess, burstTime: parseInt(e.target.value) || 0 })}
+          className="mt-1" />
       </div>
 
       <div className="flex gap-2 mb-8">
@@ -203,7 +180,7 @@ const SJF = () => {
           <div className="space-y-2">
             {processes.map((process) => (
               <div key={process.id}
-                className="bg-yellow-500 p-3 rounded-lg text-white  text-center transform transition-all hover:scale-105">
+                className="bg-yellow-500 p-3 rounded-lg text-white text-center transform transition-all hover:scale-105">
                 P{process.id} (Burst: {process.burstTime})
               </div>
             ))}
@@ -252,7 +229,7 @@ const SJF = () => {
             {completedProcesses.map((process) => (
               <div key={process.id}
                 className="bg-green-500 p-3 rounded-lg text-white text-center transform transition-all hover:scale-105">
-                P{process.id}  (Burst: {process.burstTime})
+                P{process.id} (Burst: {process.burstTime})
               </div>
             ))}
           </div>
@@ -295,11 +272,11 @@ const SJF = () => {
           icon={Clock} />
         <MetricCard
           title="Average Waiting Time"
-          value={`${calculateAverageWaitingTime().toFixed(2)}s`}
+          value={`${calculateAverageWaitingTime().toFixed(2)}μ`}
           icon={Timer} />
         <MetricCard
           title="Average Turnaround Time"
-          value={`${calculateAverageTurnaroundTime().toFixed(2)}s`}
+          value={`${calculateAverageTurnaroundTime().toFixed(2)}μ`}
           icon={Timer} />
       </div>
 
@@ -331,17 +308,18 @@ const SJF = () => {
           </table>
         </div>
       </div>
+      <div>
+        <Footer />
+      </div>
     </div>
-    <Footer />
-    </>
   );
 };
+
 SJF.propTypes = {
   title: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
   icon: PropTypes.element,  // Optional icon element
 };
-
 
 // eslint-disable-next-line react-refresh/only-export-components
 export default SJF;
