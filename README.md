@@ -31,7 +31,7 @@ A web-based tool to visualize the **Shortest Job First (SJF) Scheduling Algorith
    npm run dev
 
 **📊 How It Works**
-- Input processes with burst times and arrival times.
+- Input processes with burst times .
 - The app sorts processes according to burst time.
 - Results include average waiting and turnaround times displayed on the interface.
 
