@@ -6,25 +6,26 @@ import { Timer, Plus, Play, Clock, BarChart2, Loader2 } from "lucide-react"
 import PropTypes from 'prop-types';
 import Footer from './Footer';
 
-
 const SJF = () => {
   // State Management
   const [processes, setProcesses] = useState([]);
   const [newProcess, setNewProcess] = useState({ id: 1, burstTime: null });
   const [isRunning, setIsRunning] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   const [runningProcess, setRunningProcess] = useState(null);
   const [completedProcesses, setCompletedProcesses] = useState([]);
   const [ganttChart, setGanttChart] = useState([]);
 
   // Memoize updateProcessorState to prevent recreation on each render
-  const updateProcessorState = useCallback((time) => {
+  const updateProcessorState = useCallback(() => {
     if (!runningProcess) {
       if (processes.length > 0) {
         // Sort by burst time only
         const shortestJob = [...processes].sort((a, b) => a.burstTime - b.burstTime)[0];
+        const startTime = ganttChart.length > 0 
+          ? ganttChart[ganttChart.length - 1].end 
+          : 0;
         
-        setRunningProcess({...shortestJob, startTime: time});
+        setRunningProcess({...shortestJob, startTime, remainingTime: shortestJob.burstTime});
         setProcesses(processes.filter(p => p.id !== shortestJob.id));
         
         setGanttChart(prev => {
@@ -32,16 +33,19 @@ const SJF = () => {
           if (lastEntry && lastEntry.id === shortestJob.id && !lastEntry.end) {
             return prev;
           }
-          return [...prev, { id: shortestJob.id, start: time }];
+          return [...prev, { id: shortestJob.id, start: startTime }];
         });
       }
     } else {
-      if (time >= runningProcess.startTime + runningProcess.burstTime) {
+      const newRemainingTime = runningProcess.remainingTime - 1;
+      
+      if (newRemainingTime <= 0) {
+        const completionTime = runningProcess.startTime + runningProcess.burstTime;
         const completedProcess = {
-          ...runningProcess, 
-          completionTime: time,
+          ...runningProcess,
+          completionTime,
           waitingTime: runningProcess.startTime,
-          turnaroundTime: time
+          turnaroundTime: completionTime
         };
         
         setCompletedProcesses(prev => {
@@ -53,27 +57,25 @@ const SJF = () => {
           const lastEntry = prev[prev.length - 1];
           if (lastEntry && lastEntry.id === completedProcess.id) {
             return prev.map((entry, index) => 
-              index === prev.length - 1 ? {...entry, end: time} : entry
+              index === prev.length - 1 ? {...entry, end: completionTime} : entry
             );
           }
           return prev;
         });
         
         setRunningProcess(null);
+      } else {
+        setRunningProcess({...runningProcess, remainingTime: newRemainingTime});
       }
     }
-  }, [processes, runningProcess]);
+  }, [ganttChart, processes, runningProcess]);
 
   // Effect for running the simulation
   useEffect(() => {
     let interval;
     if (isRunning && (processes.length > 0 || runningProcess)) {
       interval = setInterval(() => {
-        setCurrentTime((prevTime) => {
-          const newTime = prevTime + 1;
-          updateProcessorState(newTime);
-          return newTime;
-        });
+        updateProcessorState();
       }, 1000);
     } else if (isRunning && processes.length === 0 && !runningProcess) {
       setIsRunning(false);
@@ -94,7 +96,6 @@ const SJF = () => {
   // Run SJF algorithm
   const runSJF = () => {
     setIsRunning(true);
-    setCurrentTime(0);
     setCompletedProcesses([]);
     setGanttChart([]);
     setRunningProcess(null);
@@ -148,7 +149,6 @@ const SJF = () => {
           type="number"
           value={newProcess.burstTime}
           placeholder="0"
-          //placeholder added
           onChange={(e) => setNewProcess({ ...newProcess, burstTime: parseInt(e.target.value) || 0 })}
           className="mt-1" />
       </div>
@@ -209,7 +209,7 @@ const SJF = () => {
               <div
                 className="absolute top-0 left-0 h-full bg-blue-500 transition-all rounded-full"
                 style={{
-                  width: `${((currentTime - runningProcess.startTime) / runningProcess.burstTime) * 100}%`,
+                  width: `${((runningProcess.burstTime - runningProcess.remainingTime) / runningProcess.burstTime) * 100}%`,
                   transitionDuration: '1s',
                 }}
               >
@@ -249,7 +249,7 @@ const SJF = () => {
               key={index}
               className="h-12 flex items-center justify-center text-white font-bold transition-all hover:brightness-110"
               style={{
-                width: `${((process.end || currentTime) - process.start) * 20}px`,
+                width: `${((process.end || (process.start + runningProcess?.burstTime)) - process.start) * 20}px`,
                 backgroundColor: `hsl(${process.id * 30}, 70%, 50%)`,
               }}
             >
@@ -259,19 +259,19 @@ const SJF = () => {
         </div>
         <div className="flex mt-1">
           {ganttChart.map((process, index) => (
-            <div key={index} className="text-xs" style={{ width: `${((process.end || currentTime) - process.start) * 20}px` }}>
+            <div key={index} className="text-xs" style={{ width: `${((process.end || (process.start + runningProcess?.burstTime)) - process.start) * 20}px` }}>
               {process.start}
             </div>
           ))}
-          <div className="text-xs">{currentTime}</div>
+          {ganttChart.length > 0 && (
+            <div className="text-xs">
+              {ganttChart[ganttChart.length - 1].end || (ganttChart[ganttChart.length - 1].start + runningProcess?.burstTime)}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <MetricCard
-          title="Current Time"
-          value={currentTime}
-          icon={Clock} />
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <MetricCard
           title="Average Waiting Time"
           value={`${calculateAverageWaitingTime().toFixed(2)}μ`}
@@ -311,8 +311,8 @@ const SJF = () => {
         </div>
       </div>
       <div>
-        <Footer />
-      </div>
+<Footer />
+</div>
     </div>
   );
 };
@@ -325,3 +325,8 @@ SJF.propTypes = {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export default SJF;
+
+
+
+
+
