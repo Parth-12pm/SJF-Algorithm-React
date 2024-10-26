@@ -147,6 +147,7 @@ const SJF = () => {
           id="burstTime"
           type="number"
           value={newProcess.burstTime}
+          placeholder="0"
           onChange={(e) => setNewProcess({ ...newProcess, burstTime: parseInt(e.target.value) || 0 })}
           className="mt-1" />
       </div>
