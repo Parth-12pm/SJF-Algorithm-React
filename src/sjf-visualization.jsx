@@ -22,8 +22,7 @@ const SJF = () => {
         // Sort by burst time only
         const shortestJob = [...processes].sort((a, b) => a.burstTime - b.burstTime)[0];
         const startTime = ganttChart.length > 0 
-          ? ganttChart[ganttChart.length - 1].end 
-          : 0;
+          ? ganttChart[ganttChart.length - 1].end : 0;
         
         setRunningProcess({...shortestJob, startTime, remainingTime: shortestJob.burstTime});
         setProcesses(processes.filter(p => p.id !== shortestJob.id));
