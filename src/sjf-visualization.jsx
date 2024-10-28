@@ -275,7 +275,7 @@ const SJF = () => {
           <BarChart2 className="w-5 h-5 text-blue-500" />
           Process Details
         </h3>
-        <div className="w-full overflow-auto">
+        <div className="w-full overflow-auto mb-5">
           <table className="min-w-full border-collapse bg-white">
             <thead>
               <tr className="bg-gray-50">
@@ -298,7 +298,7 @@ const SJF = () => {
           </table>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-8 mt-5">
         <MetricCard
           title="Average Waiting Time"
           value={`${calculateAverageWaitingTime().toFixed(2)}μ`}
