@@ -270,17 +270,6 @@ const SJF = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <MetricCard
-          title="Average Waiting Time"
-          value={`${calculateAverageWaitingTime().toFixed(2)}μ`}
-          icon={Timer} />
-        <MetricCard
-          title="Average Turnaround Time"
-          value={`${calculateAverageTurnaroundTime().toFixed(2)}μ`}
-          icon={Timer} />
-      </div>
-
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <BarChart2 className="w-5 h-5 text-blue-500" />
@@ -308,6 +297,16 @@ const SJF = () => {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <MetricCard
+          title="Average Waiting Time"
+          value={`${calculateAverageWaitingTime().toFixed(2)}μ`}
+          icon={Timer} />
+        <MetricCard
+          title="Average Turnaround Time"
+          value={`${calculateAverageTurnaroundTime().toFixed(2)}μ`}
+          icon={Timer} />
       </div>
       <div>
 <Footer />
